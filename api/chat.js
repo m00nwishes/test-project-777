@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 export default async function handler(req, res) {
     if (req.method === 'POST') {
         const apiKey = process.env.API_KEY; 
