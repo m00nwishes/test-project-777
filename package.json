@@ -1,0 +1,24 @@
+{
+  "name": "test-project-777",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/m00nwishes/test-project-777.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/m00nwishes/test-project-777/issues"
+  },
+  "homepage": "https://github.com/m00nwishes/test-project-777#readme",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}
