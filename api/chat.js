@@ -9,7 +9,8 @@ export default async function handler(req, res) {
         }
 
         const body = JSON.stringify({
-            model: 'claude-sonnet-4-5', 
+            model: 'claude-sonnet-4-5-20250929', 
+            max_tokens: 4096,
             messages: req.body.messages, 
         });
 
@@ -19,7 +20,8 @@ export default async function handler(req, res) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01'
                 },
                 body: body,
             });
