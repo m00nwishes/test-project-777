@@ -14,7 +14,7 @@ export default async function handler(req, res) {
         const url = "https://api.anthropic.com/v1/messages"; 
         
         if (!apiKey) {
-            return res.status(500).json({ error: "API Key is missing!" });
+            return res.status(500).json({ error: "API Key is missing from environment variables!" });
         }
 
         try {
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': apiKey,
+                    'x-api-key': apiKey, // Always use the env variable, not anything from request
                     'anthropic-version': '2023-06-01'
                 },
                 body: JSON.stringify(requestBody),
@@ -49,18 +49,18 @@ export default async function handler(req, res) {
             const data = await response.json();
             
             if (!response.ok) {
-                console.error('Claude API Error:', data);
                 return res.status(response.status).json(data);
             }
             
-            // Check if we have content
-            if (!data.content || !data.content[0] || !data.content[0].text) {
-                console.error('No content in response:', data);
+            // Extract the text content
+            const messageContent = data.content?.[0]?.text || '';
+            
+            if (!messageContent) {
                 return res.status(500).json({ error: 'No content received from Claude' });
             }
             
-            // OpenAI-compatible response format for Janitor AI
-            const janitorResponse = {
+            // Return in OpenAI format
+            return res.status(200).json({
                 id: data.id || `chatcmpl-${Date.now()}`,
                 object: "chat.completion",
                 created: Math.floor(Date.now() / 1000),
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
                     index: 0,
                     message: {
                         role: "assistant",
-                        content: data.content[0].text
+                        content: messageContent
                     },
                     finish_reason: data.stop_reason || "stop"
                 }],
@@ -78,15 +78,12 @@ export default async function handler(req, res) {
                     completion_tokens: data.usage?.output_tokens || 0,
                     total_tokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0)
                 }
-            };
-            
-            return res.status(200).json(janitorResponse);
+            });
             
         } catch (error) {
-            console.error('Proxy Error:', error);
             return res.status(500).json({ 
                 error: {
-                    message: error.message || 'Something went wrong with the API call.',
+                    message: error.message || 'Proxy error',
                     type: 'proxy_error'
                 }
             });
