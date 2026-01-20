@@ -27,11 +27,10 @@ export default async function handler(req, res) {
             model: 'claude-sonnet-4-5-20250929', 
             max_tokens: 4096,
             messages: regularMessages,
-            ...(systemPrompt && { system: systemPrompt }) // Only add system if it exists
+            ...(systemPrompt && { system: systemPrompt })
         });
 
         try {
-            // Make the POST request to the AI model's endpoint
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -42,18 +41,35 @@ export default async function handler(req, res) {
                 body: body,
             });
             const data = await response.json();
-            // If the response is not OK (status 200), return the error message
+            
             if (!response.ok) {
                 return res.status(response.status).json({ error: data.error || 'Unknown Error' });
             }
-            // If successful, send the data back to the client
-            res.status(200).json(data);
+            
+            // Transform Claude's response to match Janitor AI's expected format
+            const transformedResponse = {
+                id: data.id,
+                object: "chat.completion",
+                created: Math.floor(Date.now() / 1000),
+                model: data.model,
+                choices: [
+                    {
+                        index: 0,
+                        message: {
+                            role: "assistant",
+                            content: data.content[0].text
+                        },
+                        finish_reason: data.stop_reason
+                    }
+                ],
+                usage: data.usage
+            };
+            
+            res.status(200).json(transformedResponse);
         } catch (error) {
-            // In case of any error, send it back to the client
             res.status(500).json({ error: error.message || 'Something went wrong with the API call.' });
         }
     } else {
-        // If method is not POST, send a 405 Method Not Allowed error
         res.status(405).json({ error: 'Method Not Allowed' });
     }
 }
