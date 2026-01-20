@@ -15,11 +15,21 @@ export default async function handler(req, res) {
         if (!apiKey) {
             return res.status(500).json({ error: "API Key is missing!" });
         }
+
+        // Separate system messages from regular messages
+        const systemMessages = req.body.messages.filter(msg => msg.role === 'system');
+        const regularMessages = req.body.messages.filter(msg => msg.role !== 'system');
+        
+        // Combine system messages into one string
+        const systemPrompt = systemMessages.map(msg => msg.content).join('\n\n');
+
         const body = JSON.stringify({
             model: 'claude-sonnet-4-5-20250929', 
             max_tokens: 4096,
-            messages: req.body.messages, 
+            messages: regularMessages,
+            ...(systemPrompt && { system: systemPrompt }) // Only add system if it exists
         });
+
         try {
             // Make the POST request to the AI model's endpoint
             const response = await fetch(url, {
