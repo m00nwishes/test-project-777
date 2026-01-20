@@ -10,6 +10,10 @@ export default async function handler(req, res) {
     }
     
     if (req.method === 'POST') {
+        // LOG WHAT JANITOR SENDS
+        console.log('Request body:', JSON.stringify(req.body, null, 2));
+        console.log('Request headers:', JSON.stringify(req.headers, null, 2));
+        
         const apiKey = process.env.API_KEY; 
         const url = "https://api.anthropic.com/v1/messages"; 
         
@@ -40,7 +44,7 @@ export default async function handler(req, res) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': apiKey, // Always use the env variable, not anything from request
+                    'x-api-key': apiKey,
                     'anthropic-version': '2023-06-01'
                 },
                 body: JSON.stringify(requestBody),
@@ -60,7 +64,7 @@ export default async function handler(req, res) {
             }
             
             // Return in OpenAI format
-            return res.status(200).json({
+            const janitorResponse = {
                 id: data.id || `chatcmpl-${Date.now()}`,
                 object: "chat.completion",
                 created: Math.floor(Date.now() / 1000),
@@ -78,9 +82,15 @@ export default async function handler(req, res) {
                     completion_tokens: data.usage?.output_tokens || 0,
                     total_tokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0)
                 }
-            });
+            };
+            
+            // LOG WHAT WE'RE SENDING BACK
+            console.log('Response:', JSON.stringify(janitorResponse, null, 2));
+            
+            return res.status(200).json(janitorResponse);
             
         } catch (error) {
+            console.error('Error:', error);
             return res.status(500).json({ 
                 error: {
                     message: error.message || 'Proxy error',
